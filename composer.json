@@ -1,0 +1,12 @@
+{
+    "name": "croudtech/docker-registry-api",
+    "description": "PHP Api Client for the Docker Registry",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Jim Robinson",
+            "email": "jim.robinson@croud.co.uk"
+        }
+    ],
+    "require": {}
+}
