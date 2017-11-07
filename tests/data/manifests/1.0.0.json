@@ -1,0 +1,34 @@
+{
+    "schemaVersion": 1,
+    "name": "myrepo/image",
+    "tag": "1.0.0",
+    "architecture": "amd64",
+    "fsLayers": [{
+            "blobSum": "sha256:e904e5aa-f765-5369-aac4-c722e452ab9a"
+        },
+        {
+            "blobSum": "sha256:aa01ab58-f383-54d3-b5d9-aff32062e42f"
+        }
+    ],
+    "history": [{
+            "v1Compatibility": "{\"architecture\":\"amd64\",\"config\":{\"Hostname\":\"837a64dcc771\",\"Domainname\":\"\",\"User\":\"root\",\"AttachStdin\":false,\"AttachStdout\":false,\"AttachStderr\":false,\"ExposedPorts\":{\"443/tcp\":{},\"80/tcp\":{}},\"Tty\":false,\"OpenStdin\":false,\"StdinOnce\":false,\"Env\":[\"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\"NGINX_VERSION=1.11.12\",\"SUPERVISOR_USER=supervisoradmin\",\"DOLLAR=$\",\"NGINX_HOST=localhost\",\"NGINX_PORT=80\",\"DOC_ROOT=/var/www/app\",\"PHP_FPM_HOST=127.0.0.1\"],\"Cmd\":[\"/usr/bin/supervisord\",\"-n\",\"-c\",\"/etc/supervisord.conf\"],\"ArgsEscaped\":true,\"Image\":\"sha256:d2254f71dd00421c3037e1f1b06f66d0a5c5b704a78995810c66647049a9c06f\",\"Volumes\":{\"/etc/supervisor/conf.d\":{},\"/var/www/app\":{}},\"WorkingDir\":\"\",\"Entrypoint\":[\"docker-entrypoint.sh\"],\"OnBuild\":[],\"Labels\":{\"com.croudtech.gitref\":\"testlabelsearch1\"}},\"container\":\"46dd92a8476edb1b0d6a7e9f0215556d473ae750011ace79ff4cdf44627fe51e\",\"container_config\":{\"Hostname\":\"837a64dcc771\",\"Domainname\":\"\",\"User\":\"root\",\"AttachStdin\":false,\"AttachStdout\":false,\"AttachStderr\":false,\"ExposedPorts\":{\"443/tcp\":{},\"80/tcp\":{}},\"Tty\":false,\"OpenStdin\":false,\"StdinOnce\":false,\"Env\":[\"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\",\"NGINX_VERSION=1.11.12\",\"SUPERVISOR_USER=supervisoradmin\",\"DOLLAR=$\",\"NGINX_HOST=localhost\",\"NGINX_PORT=80\",\"DOC_ROOT=/var/www/app\",\"PHP_FPM_HOST=127.0.0.1\"],\"Cmd\":[\"/bin/sh\",\"-c\",\"chmod +x /etc/container_start_scripts/docker-nginx-entrypoint.sh\"],\"ArgsEscaped\":true,\"Image\":\"sha256:d2254f71dd00421c3037e1f1b06f66d0a5c5b704a78995810c66647049a9c06f\",\"Volumes\":{\"/etc/supervisor/conf.d\":{},\"/var/www/app\":{}},\"WorkingDir\":\"\",\"Entrypoint\":[\"docker-entrypoint.sh\"],\"OnBuild\":[],\"Labels\":{}},\"created\":\"2017-03-31T10:55:59.726055611Z\",\"docker_version\":\"1.12.6-cs6\",\"id\":\"0fb749d210ced413d5f7f831cae15be10985975abed7241661d4cadc505507cf\",\"os\":\"linux\",\"parent\":\"0799bef7e51467c8c5b5deb79817e84d84fc1356c2df08e1c1682f0ffa9c4e09\"}"
+        },
+        {
+            "v1Compatibility": "{\"id\":\"0e5e8e2a-d027-5a8e-b08a-437c37f3d360\",\"parent\":\"1fcaa43e-b183-5680-a2f7-013d0fcbda92\",\"created\":\"2017-03-31T10:55:58.234247968Z\",\"container_config\":{\"Cmd\":[\"/bin/sh -c #(nop) COPY file:17324c087f3a887fceacec6360d96140b66d85de65bc6155780a2377ce568bc7 in /etc/container_start_scripts/ \"]}}"
+        }
+    ],
+    "signatures": [{
+        "header": {
+            "jwk": {
+                "crv": "P-256",
+                "kid": "3d831139-36e6-58a0-8579-cf9b0b9cecb6",
+                "kty": "EC",
+                "x": "1ac44e8e-779f-5750-9614-cf039d58a7e8",
+                "y": "16e186bd-7939-5d83-b368-1cafc8b466f6"
+            },
+            "alg": "ES256"
+        },
+        "signature": "58dab338-ac6a-560a-b3c5-4a41210ec2e8",
+        "protected": "8fe2556f-a9e6-51c7-bff4-bab364cfb5e8"
+    }]
+}

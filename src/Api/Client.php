@@ -51,11 +51,34 @@ class Client
     protected $auth_token = '';
 
     /**
-     * The auth token expiry time
+     * The docker repo
      *
-     * @var integer
+     * eg yournamespace/yourrepo
+     *
+     * @var string
      */
-    protected $auth_token_expires = 0;
+    protected $docker_repo;
+
+    /**
+     * The url of the docker registry api you want to connect to
+     *
+     * @var [type]
+     */
+    protected $docker_api_url = 'https://index.docker.io';
+
+    /**
+     * Tags for this repo
+     *
+     * @var array
+     */
+    protected $tags;
+
+    /**
+     * An array of manifests for this repo
+     *
+     * @var array
+     */
+    protected $manifests = [];
 
     /**
      * Undocumented function
@@ -65,31 +88,34 @@ class Client
      * @param [type] $api_key
      * @param [type] $auth_url
      */
-    public function __construct(ClientInterface $client, $username, $api_key, ArrayAccess $config)
+    public function __construct(ClientInterface $client, $username, $api_key, $docker_repo, $docker_api_url = 'https://index.docker.io')
     {
         $this->http_client = $client;
         $this->username = $username;
         $this->api_key = $api_key;
+        $this->docker_repo = $docker_repo;
+        $this->docker_api_url = $docker_api_url;
     }
 
     /**
      * Make request
      *
      * @param string $method
-     * @param string $uri
+     * @param string $path
      * @param array $options
      * @param boolean $fetch_token
      * @return void
      */
-    public function request($method, $uri, $options = [], $fetch_token = true)
+    public function request($method, $path, $options = [], $fetch_token = true)
     {
+        $url = $this->docker_api_url . $path;
         $options['http_errors'] = false;
         $options['headers']['Authorization'] = 'Bearer ' . $this->getAuthToken();
-        $response = $this->http_client->request($method, $uri, $options);
+        $response = $this->http_client->request($method, $url, $options);
 
         if ($response->getStatusCode() == 401 && $fetch_token) {
             $this->fetchNewAuthToken($response);
-            return $this->request($method, $uri, $options, false);
+            return $this->request($method, $url, $options, false);
         }
 
         return $response;
@@ -151,5 +177,131 @@ class Client
     public function getAuthToken() : string
     {
         return $this->auth_token;
+    }
+
+    /**
+     * Get a list of tags, cached locally unless $refetch=true is set
+     *
+     * @param boolean $refetch  Re-fetch from API
+     * @return array
+     */
+    public function getTags($refetch = false) : array
+    {
+        if (is_null($this->tags) || $refetch === true) {
+            $response = $this->request('GET', sprintf('/v2/%s/tags/list', $this->docker_repo));
+            if ($response->getStatusCode() == 200 && $response_array = json_decode($response->getBody()->__toString(), true)) {
+                return $this->tags = $response_array['tags'];
+            }
+            throw new \Exception('Invalid response from registry');
+        } else {
+            return $this->tags;
+        }
+    }
+
+    /**
+     * Get the manifest for a tag
+     *
+     * @param string $tag
+     * @return void
+     */
+    public function getManifest($tag, $refetch = false) : array
+    {
+        if (!isset($this->manifests[$tag]) || $refetch === true) {
+            $response = $this->request('GET', sprintf('/v2/%s/manifests/%s', $this->docker_repo, $tag));
+            return $this->manifests[$tag] = $this->parseManifest($response->getBody()->__toString());
+            throw new \Exception('Invalid response from registry');
+        } else {
+            return $this->tags;
+        }
+    }
+
+    /**
+     * Parse the manifest json
+     *
+     * @param string $manifest
+     * @return array
+     */
+    public function parseManifest($manifest) : array
+    {
+        if ($manifest_array = json_decode($manifest, true)) {
+            if (!isset($manifest_array['schemaVersion'])) {
+                throw new \Exception('Invalid manifest, no schema version found, unable to parse');
+            }
+            $parser_method = 'decodeManifestVersion' . $manifest_array['schemaVersion'];
+            return $this->$parser_method($manifest_array);
+        }
+        throw new \Exception('Invalid manifest, unable to parse');
+    }
+
+    /**
+     * Decode manifest json for schema version 1
+     *
+     * @return array
+     */
+    public function decodeManifestVersion1($manifest_array) : array
+    {
+        if (is_string($manifest_array)) {
+            $manifest_array = json_decode($manifest_array, true);
+        }
+
+        if (isset($manifest_array['history'])) {
+            foreach ($manifest_array['history'] as $v1key => $v1json) {
+                $manifest_array['history'][$v1key]['v1Compatibility'] = json_decode($v1json['v1Compatibility'], true);
+            }
+        }
+
+        return $manifest_array;
+    }
+
+    /**
+     * Ecnode manifest json for schema version 1
+     *
+     * @return string
+     */
+    public function encodeManifestVersion1(array $manifest_array) : string
+    {
+        if (isset($manifest_array['history'])) {
+            foreach ($manifest_array['history'] as $v1key => $v1json) {
+                $manifest_array['history'][$v1key]['v1Compatibility'] = json_encode($v1json['v1Compatibility']);
+            }
+        }
+
+        return json_encode($manifest_array);
+    }
+
+    public function decodeManifestVersion2() : array
+    {
+        throw new \Exception('Not Implemented');
+    }
+
+    /**
+     *
+     *
+     * @param string $label
+     * @param string $value
+     * @yields array
+     * @return void
+     */
+    public function searchLabels($label, $value)
+    {
+        foreach ($this->getTags() as $tag) {
+            $manifest = $this->getManifest($tag);
+            if (isset($manifest['history'][0]['v1Compatibility']['config']['Labels'][$label]) && $manifest['history'][0]['v1Compatibility']['config']['Labels'][$label] == $value) {
+                yield $manifest;
+            }
+        }
+    }
+
+    /**
+     * Re-tag a tag
+     *
+     * @param array $manifest
+     * @param The new tag $new_tag
+     * @return void
+     */
+    public function reTag($manifest, $new_tag)
+    {
+        $encoded_manifest = $this->encodeManifestVersion1($manifest);
+        return $this->request('PUT', sprintf('/v2/%s/manifests/%s', $this->docker_repo, $new_tag));
     }
 }
